@@ -14,7 +14,7 @@ def usporediQso(log1data,log2data):
 
     #te usporedi po vremenu i broju veze log1 na log2
     if (log1data.r_received > log2data.r_received) and (log1data.timedate < log2data.timedate) == True:
-        print("[",log1data.callsign,"] Primljeni broj u (",log1data.filename,")logu",log1data.r_received,"je veci od primljenoga broja -",log2data.r_received,"u (",log2data.filename,")logu iako je veza u logu 1 ranije odrzana")
+        print("[",log1data.callsign,"] Primljeni broj u (",log1data.filename,")logu -",log1data.r_received,"je veci od primljenoga broja -",log2data.r_received,"u (",log2data.filename,")logu iako je veza u logu 1 ranije odrzana")
         hasErrors = True
             
         #te usporedi po vremenu i broju veze log2 na log1
