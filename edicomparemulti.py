@@ -5,8 +5,30 @@
 import datetime
 
 #funckcije 
-def ucitajEdi(filename,dest):
 
+def usporediQso(log1data,log2data):
+    hasErrors = False
+    if(log1data.r_locator == log2data.r_locator) == False:
+        print("[",log1data.callsign,"] Lokator u (",log1data.filename,")logu -",log1data.r_locator,",redni broj veze",log1data.r_sent,"se ne poklapa sa lokatorom u (",log2data.filename,")logu -",log2data.r_locator,",redni broj veze",log2data.r_sent)
+        hasErrors = True
+
+    #te usporedi po vremenu i broju veze log1 na log2
+    if (log1data.r_received > log2data.r_received) and (log1data.timedate < log2data.timedate) == True:
+        print("[",log1data.callsign,"] Primljeni broj u (",log1data.filename,")logu",log1data.r_received,"je veci od primljenoga broja -",log2data.r_received,"u (",log2data.filename,")logu iako je veza u logu 1 ranije odrzana")
+        hasErrors = True
+            
+        #te usporedi po vremenu i broju veze log2 na log1
+    if (log1data.r_received < log2data.r_received) and (log1data.timedate > log2data.timedate) == True:
+        print("[",log1data.callsign,"] Primljeni broj u (",log1data.filename,") logu -",log2data.r_received,"je veci od primljenoga broja -",log1data.r_received,"u (",log2data.filename,")logu iako je veza u logu 2 ranije odrzana")
+        hasErrors = True
+
+    if(hasErrors): #odvoji greske za lakse citanje
+        print(" ")
+        return False
+    return True
+
+def ucitajEdi(filename):
+    dest = {}
     try:
 
         with open(filename) as fp:  
@@ -31,7 +53,7 @@ def ucitajEdi(filename,dest):
                     #broj bodova
                     qrb = line[10]
                     #print(time,"|",callsign,"|",rstsent,"|",r_sent,"|",rstreceived,"|",r_received,"|",r_locator,"|",qrb)
-                    data = qso(callsign,time,rstsent,r_sent,rstreceived,r_received,r_locator,qrb)
+                    data = qso(callsign,time,rstsent,r_sent,rstreceived,r_received,r_locator,qrb,filename)
 
                     # na kraju spremi u odredjeni spremnik
                     dest[callsign] = data
@@ -39,6 +61,9 @@ def ucitajEdi(filename,dest):
     except:
         print("Ne mogu otvoriti falj ",filename)
         quit()
+
+    return dest
+
 
 
 #classevi 
@@ -48,7 +73,7 @@ class edi: #ovaj jos nije implementiran
         self.locator = locator
 
 class qso:
-    def __init__(self,callsign,timedate,rstsent,r_sent,rstreceived,r_received,r_locator,qrb):
+    def __init__(self,callsign,timedate,rstsent,r_sent,rstreceived,r_received,r_locator,qrb,filename):
         self.callsign = str(callsign)
         self.timedate = str(timedate)
         self.rstsent = int(rstsent)
@@ -57,58 +82,39 @@ class qso:
         self.r_received = int(r_received)
         self.r_locator = str(r_locator)
         self.qrb = str(qrb)
-    def __str__(self):
-        return(self.callsign)
+        self.filename = str(filename)
+    #def __str__(self):
+        #return(self.callsign)
 
 nLogs = int(input("Unesi broj logova za crosscheck provjeru: "))
-logs = {}
+logs = []
 for i in range(nLogs):
-    filename_edi = input("Unesi filename edi loga: ")
-    data = []
-    ucitajEdi(filename_edi,data)
-    logs[filename_edi] = data
+    filename = input("Unesi filename loga:")
+    data = ucitajEdi(filename)
+    logs.append(data)
 
 print("")
 
-
-
-#napravi provjeru loga2 referencom u log1, provjeri lokatore
 brojGreski = 0
 for log in logs:
+    qsolist = log
 
-    #za svaki ppozivni znak u logu jedan
+    for qso in logs:
+        qsolist2 = qso
 
-    try: 
-        hasErrors = False
-        log1data = log[1]  
-        filename_edi_1 = log[0]
+        for callsign in qsolist2:
+            veza1 = qsolist2[callsign]
+            try:
+                veza2 = qsolist[veza1.callsign]
+                #print(veza1.callsign , veza2.callsign)
+                ispravan = usporediQso(veza1,veza2)
+                if ispravan == False:
+                    brojGreski +=1
+            except:
+                pass
 
-        for log2 in logs:
-            filename_edi_2 = log2[0]
-            log2data = log[1] # ako taj isti postoji u logu2 spremi ga u varijable,
-            log2data = log2data[log1data.callsign]
-            #te usporedi po lokatoru
-            if(log1data.r_locator == log2data.r_locator) == False:
-                print("[",log1data.callsign,"] Lokator u prvome(",filename_edi_1,")logu -",log1data.r_locator,",redni broj veze",log1data.r_sent,"se ne poklapa sa lokatorom u drugome(",filename_edi_2,")logu -",log2data.r_locator,",redni broj veze",log2data.r_sent)
-                brojGreski += 1
-                hasErrors = True
 
-            #te usporedi po vremenu i broju veze log1 na log2
-            if (log1data.r_received > log2data.r_received) and (log1data.timedate < log2data.timedate) == True:
-                print("[",log1data.callsign,"] Primljeni broj u prvome(",filename_edi_1,")logu",log1data.r_received,"je veci od primljenoga broja -",log2data.r_received,"u drugome(",filename_edi_2,")logu iako je veza u logu 1 ranije odrzana")
-                brojGreski += 1
-                hasErrors = True
-            
-            #te usporedi po vremenu i broju veze log2 na log1
-            if (log1data.r_received < log2data.r_received) and (log1data.timedate > log2data.timedate) == True:
-                print("[",log1data.callsign,"] Primljeni broj u drugome (",filename_edi_2,") logu -",log2data.r_received,"je veci od primljenoga broja -",log1data.r_received,"u prvome(",filename_edi_1,")logu iako je veza u logu 2 ranije odrzana")
-                brojGreski += 1
-                hasErrors = True
 
-            if(hasErrors): #odvoji greske za lakse citanje
-                print(" ")
-    except:
-        pass
 
 if brojGreski != 0:
     print("Pronadjeno je",brojGreski,"nepoklapanja u logovima")
