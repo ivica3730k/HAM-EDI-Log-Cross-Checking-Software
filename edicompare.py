@@ -71,6 +71,7 @@ ucitajEdi(filename_edi_2,log2)
 
 
 #napravi provjeru loga2 referencom u log1, provjeri lokatore
+brojGreski = 0
 for i in log1:
 
     #za svaki ppozivni znak u logu jedan
@@ -83,16 +84,19 @@ for i in log1:
         #te usporedi po lokatoru
         if(log1data.r_locator == log2data.r_locator) == False:
             print("[",log1data.callsign,"]Lokator u prvome logu",log1data.r_locator,",redni broj veze",log1data.r_sent,"se ne poklapa sa lokaotorom u drugome logu",log2data.r_locator,",redni broj veze",log2data.r_sent)
+            brojGreski += 1
             hasErrors = True
 
         #te usporedi po vremenu i broju veze log1 na log2
         if (log1data.r_received > log2data.r_received) and (log1data.timedate < log2data.timedate) == True:
             print("[",log1data.callsign,"]Primljeni broj u prvome logu",log1data.r_received,",redni broj veze",log1data.r_sent,"je veci od primljenoga broja",log2data.r_received,"u drugome logu,redni broj veze,",log2data.r_sent,"iako je veza u logu 1 ranije odrzana")
+            brojGreski += 1
             hasErrors = True
         
         #te usporedi po vremenu i broju veze log2 na log1
         if (log1data.r_received < log2data.r_received) and (log1data.timedate > log2data.timedate) == True:
             print("[",log1data.callsign,"]Primljeni broj u drugome logu",log2data.r_received,",redni broj veze",log2data.r_sent,"je veci od primljenoga broja",log1data.r_received,"u prvome logu,redni broj veze,",log1data.r_sent,"iako je veza u logu 2 ranije odrzana")
+            brojGreski += 1
             hasErrors = True
 
         if(hasErrors): #odvoji greske za lakse citanje
@@ -100,5 +104,9 @@ for i in log1:
     except:
         pass
 
-
+if brojGreski != 0:
+    print("Pronadjeno je",brojGreski,"nepoklapanja u logovima")
+else:
+    print("Nepoklapanja nisu pronadjena")
+    
 input("Pritisni bilo koju tipku za izlaz ")
