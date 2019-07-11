@@ -63,6 +63,8 @@ class qso:
 filename_edi_1 = input("Unesi filename prvoga edi loga: ")
 filename_edi_2 = input("Unesi filename drugoga edi loga: ")
 
+print("")
+
 log1 = {} #spremiste za prvi log, moguce korisiti SQL u buducnosti
 ucitajEdi(filename_edi_1,log1)
 
@@ -83,24 +85,24 @@ for i in log1:
         
         #te usporedi po lokatoru
         if(log1data.r_locator == log2data.r_locator) == False:
-            print("[",log1data.callsign,"]Lokator u prvome logu",log1data.r_locator,",redni broj veze",log1data.r_sent,"se ne poklapa sa lokaotorom u drugome logu",log2data.r_locator,",redni broj veze",log2data.r_sent)
+            print("[",log1data.callsign,"] Lokator u prvome(",filename_edi_1,")logu -",log1data.r_locator,",redni broj veze",log1data.r_sent,"se ne poklapa sa lokatorom u drugome(",filename_edi_2,")logu -",log2data.r_locator,",redni broj veze",log2data.r_sent)
             brojGreski += 1
             hasErrors = True
 
         #te usporedi po vremenu i broju veze log1 na log2
         if (log1data.r_received > log2data.r_received) and (log1data.timedate < log2data.timedate) == True:
-            print("[",log1data.callsign,"]Primljeni broj u prvome logu",log1data.r_received,",redni broj veze",log1data.r_sent,"je veci od primljenoga broja",log2data.r_received,"u drugome logu,redni broj veze,",log2data.r_sent,"iako je veza u logu 1 ranije odrzana")
+            print("[",log1data.callsign,"] Primljeni broj u prvome(",filename_edi_1,")logu",log1data.r_received,"je veci od primljenoga broja -",log2data.r_received,"u drugome(",filename_edi_2,")logu iako je veza u logu 1 ranije odrzana")
             brojGreski += 1
             hasErrors = True
         
         #te usporedi po vremenu i broju veze log2 na log1
         if (log1data.r_received < log2data.r_received) and (log1data.timedate > log2data.timedate) == True:
-            print("[",log1data.callsign,"]Primljeni broj u drugome logu",log2data.r_received,",redni broj veze",log2data.r_sent,"je veci od primljenoga broja",log1data.r_received,"u prvome logu,redni broj veze,",log1data.r_sent,"iako je veza u logu 2 ranije odrzana")
+            print("[",log1data.callsign,"] Primljeni broj u drugome (",filename_edi_2,") logu -",log2data.r_received,"je veci od primljenoga broja -",log1data.r_received,"u prvome(",filename_edi_1,")logu iako je veza u logu 2 ranije odrzana")
             brojGreski += 1
             hasErrors = True
 
         if(hasErrors): #odvoji greske za lakse citanje
-            print("---------------------------------------------------------------------------------------------------------------------------")
+            print(" ")
     except:
         pass
 
@@ -108,5 +110,5 @@ if brojGreski != 0:
     print("Pronadjeno je",brojGreski,"nepoklapanja u logovima")
 else:
     print("Nepoklapanja nisu pronadjena")
-    
+
 input("Pritisni bilo koju tipku za izlaz ")
