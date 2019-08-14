@@ -1,11 +1,17 @@
 #Software za komparaciju edi logova
 #Usporedba da li isti pozivni znak u dva loga ima isti lokator 
-#i provjera da li redni broj veze ima smisla u obziru na vrijeme veze.
+#i provjera da li rb = ima smisla u obziru na vrijeme veze.
 
 import datetime
+from colorama import Fore
+from colorama import Style
+from colorama import init
+init(convert=True)
+
 
 #funckcije 
-def ucitajEdi(filename,dest):
+
+def ucitajEdi(filename,dest,dest2):
 
     try:
 
@@ -35,6 +41,7 @@ def ucitajEdi(filename,dest):
 
                     # na kraju spremi u odredjeni spremnik
                     dest[callsign] = data
+                    dest2[r_locator] = data
 
     except:
         print("Ne mogu otvoriti falj ",filename_edi_1)
@@ -60,22 +67,26 @@ class qso:
     def __str__(self):
         return(self.callsign)
 
+
 filename_edi_1 = input("Unesi filename prvoga edi loga: ")
 filename_edi_2 = input("Unesi filename drugoga edi loga: ")
 
 print("")
 
 log1 = {} #spremiste za prvi log, moguce korisiti SQL u buducnosti
-ucitajEdi(filename_edi_1,log1)
+log1byLoc ={}
+ucitajEdi(filename_edi_1,log1,log1byLoc)
 
 log2 = {} #spremiste za drugi log, moguce korisitit SQL u buducnosti
-ucitajEdi(filename_edi_2,log2)
+log2byLoc = {}
+ucitajEdi(filename_edi_2,log2,log2byLoc)
 
 
 #napravi provjeru loga2 referencom u log1, provjeri lokatore
 brojGreski = 0
-for i in log1:
+brojUpozorenja = 0
 
+for i in log1:
     #za svaki ppozivni znak u logu jedan
 
     try: 
@@ -85,19 +96,19 @@ for i in log1:
         
         #te usporedi po lokatoru
         if(log1data.r_locator == log2data.r_locator) == False:
-            print("[",log1data.callsign,"] Lokator u prvome(",filename_edi_1,")logu -",log1data.r_locator,",redni broj veze",log1data.r_sent,"se ne poklapa sa lokatorom u drugome(",filename_edi_2,")logu -",log2data.r_locator,",redni broj veze",log2data.r_sent)
+            print(Fore.RED +"[",log1data.callsign,"]"+ Style.RESET_ALL +"Lokator u prvome logu -", Fore.MAGENTA + log1data.r_locator + Style.RESET_ALL,",rb =",log1data.r_sent,"se ne poklapa sa lokatorom u drugome logu -",Fore.MAGENTA + log2data.r_locator + Style.RESET_ALL,",rb =",log2data.r_sent)
             brojGreski += 1
             hasErrors = True
 
         #te usporedi po vremenu i broju veze log1 na log2
         if (log1data.r_received > log2data.r_received) and (log1data.timedate < log2data.timedate) == True:
-            print("[",log1data.callsign,"] Primljeni broj u prvome(",filename_edi_1,")logu",log1data.r_received,"je veci od primljenoga broja -",log2data.r_received,"u drugome(",filename_edi_2,")logu iako je veza u logu 1 ranije odrzana")
+            print(Fore.RED +"[",log1data.callsign,"]"+ Style.RESET_ALL +"Primljeni broj u prvome logu",Fore.MAGENTA +log1data.r_received+ Style.RESET_ALL,"je veci od primljenoga broja -",Fore.MAGENTA +log2data.r_received+ Style.RESET_ALL,"u drugome logu iako je veza u logu 1 ranije odrzana")
             brojGreski += 1
             hasErrors = True
         
         #te usporedi po vremenu i broju veze log2 na log1
         if (log1data.r_received < log2data.r_received) and (log1data.timedate > log2data.timedate) == True:
-            print("[",log1data.callsign,"] Primljeni broj u drugome (",filename_edi_2,") logu -",log2data.r_received,"je veci od primljenoga broja -",log1data.r_received,"u prvome(",filename_edi_1,")logu iako je veza u logu 2 ranije odrzana")
+            print(Fore.RED +"[",log1data.callsign,"]"+ Style.RESET_ALL +"Primljeni broj u drugome logu -",Fore.MAGENTA +log2data.r_received+ Style.RESET_ALL,"je veci od primljenoga broja -",Fore.MAGENTA +log1data.r_received+ Style.RESET_ALL,"u prvome logu iako je veza u logu 2 ranije odrzana")
             brojGreski += 1
             hasErrors = True
 
@@ -106,8 +117,28 @@ for i in log1:
     except:
         pass
 
+
+for i in log1byLoc:
+    hasWarnings = False
+    try:
+        log1data = log1byLoc[i]
+        log2data = log2byLoc[log1data.r_locator]
+
+        if (log1data.callsign == log2data.callsign) == False:
+            print(Fore.YELLOW + "[",log1data.r_locator,"]"+ Style.RESET_ALL +"Pozivni znak u prvome logu -" ,Fore.MAGENTA + log1data.callsign + Style.RESET_ALL ,",rb =",log1data.r_sent,"se ne poklapa sa pozivnim znak u drugome logu -",Fore.MAGENTA + log2data.callsign + Style.RESET_ALL ,",rb =",log2data.r_sent, "iako je lokator jednak")
+            brojUpozorenja += 1
+            hasWarnings = True
+
+
+        if(hasWarnings): #odvoji greske za lakse citanje
+            print(" ")
+    except:
+        pass
+
 if brojGreski != 0:
-    print("Pronadjeno je",brojGreski,"nepoklapanja u logovima")
+    print(Fore.RED + "Pronadjeno je",brojGreski,"nepoklapanja u logovima" + Style.RESET_ALL)
+if brojUpozorenja != 0:
+    print(Fore.YELLOW + "Pronadjeno je",brojUpozorenja,"upozorenja u logovima"+ Style.RESET_ALL)
 else:
     print("Nepoklapanja nisu pronadjena")
 
